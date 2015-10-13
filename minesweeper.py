@@ -9,11 +9,11 @@ COLORS = {0: cfg.GRAY, 1: cfg.NAVY, 2: cfg.BLUE,
           6: cfg.RED, 7: cfg.VIOLET, 8: cfg.PINK, 'x': cfg.BLACK}
 
 TEXT_COLORS = {'!': cfg.RED, 1: cfg.WHITE, 2: cfg.WHITE,
-               3: cfg.WHITE, 4: cfg.BLACK, 5: cfg.BLACK,
+               3: cfg.BLACK, 4: cfg.BLACK, 5: cfg.BLACK,
                6: cfg.WHITE, 7: cfg.WHITE, 8: cfg.BLACK,
                'pre game': cfg.WHITE, 'post game': cfg.BLACK}
 
-BG_COLORS = {'safe': cfg.WHITE, 'flag': cfg.LIGHTGRAY}
+BG_COLORS = {'safe': cfg.WHITE, 'flag': cfg.PINK}
 
 class Board(object):
     def __init__(self, territory_str = None):
@@ -309,7 +309,7 @@ class MinesweeperPygame(object):
                 self.board.mark_mine(row, col)
 
     def draw_board(self):
-        self.screen.fill(cfg.HIDDEN_COLOR)
+        self.screen.fill(BG_COLORS[self.click_status])
         for r, row in enumerate(self.board.display):
             for c, col in enumerate(row):
                 xval = c * self.square_width + 1
