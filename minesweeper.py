@@ -2,6 +2,7 @@ from __future__ import division
 import os
 import pygame as pg
 import config as cfg
+import random
 
 KEYMAPS = {pg.K_f: 'flag', pg.K_s: 'safe', pg.K_r: 'remove'}
 COLORS = {0: cfg.GRAY, 1: cfg.NAVY, 2: cfg.BLUE,
@@ -13,22 +14,41 @@ TEXT_COLORS = {'!': cfg.RED, 1: cfg.WHITE, 2: cfg.WHITE,
                6: cfg.WHITE, 7: cfg.WHITE, 8: cfg.BLACK,
                'pre game': cfg.WHITE, 'post game': cfg.BLACK}
 
+SELECTED = {True: cfg.RED, False: cfg.WHITE}
+
 BG_COLORS = {'safe': cfg.WHITE, 'flag': cfg.PINK}
+
+LEVELS = {0: (9, 10) , 1: (16, 40), 2: (22, 99)}
 
 class Board(object):
     def __init__(self, territory_str = None):
         self.territory_str = territory_str
         self.territory = None
-        self.make_territory(territory_str)
+        self.make_territory()
         self.reset()
 
-    def reset(self):
-        self.display = [[' ' for col in row] for row in self.territory]
+    def reset(self, difficulty = None):
+        if difficulty is not None:
+            row_length, mine_count = LEVELS[difficulty]
+            board_size = row_length ** 2
+            choices = list(range(board_size))
+            random.shuffle(choices)
+            mines = choices[:mine_count]
+            self.territory_str = ''
+            for row in range(row_length):
+                for col in range(row_length):
+                    if row * row_length + col in mines:
+                        self.territory_str += '1'
+                    else:
+                        self.territory_str += '0'
+                self.territory_str += '\n'
+        self.make_territory()
         self.dead = False
 
-    def make_territory(self, territory_str):
-        if territory_str:
-            self.territory = territory_str.splitlines()
+    def make_territory(self):
+        if self.territory_str:
+            self.territory = self.territory_str.splitlines()
+            self.display = [[' ' for col in row] for row in self.territory]
 
     def has_mine(self, r, c):
         return True if self.territory[r][c] == '1' else False
@@ -223,9 +243,13 @@ class MinesweeperPygame(object):
         self.status = 'pre game'
         self.message = cfg.WELCOME_MESSAGE
         self.font = pg.font.SysFont(cfg.TEXT_FONT, cfg.TEXT_SIZE, False, False)
-        self.square_width = cfg.WIDTH / len(self.board.territory[0])
-        self.square_height = cfg.HEIGHT / len(self.board.territory[1])
+        self.set_square_size()
         self.click_status = 'safe'
+        self.selection = 0
+
+    def set_square_size(self):
+        self.square_width = cfg.WIDTH / len(self.board.territory[0])
+        self.square_height = cfg.HEIGHT / len(self.board.territory)
 
     def game_loop(self):
         """
@@ -263,17 +287,36 @@ class MinesweeperPygame(object):
                 if event.key == pg.K_RETURN:
                     if self.status == 'pre game':
                         self.status = 'in game'
-                        self.board.reset()
+                        self.board.reset(self.selection)
+                        self.set_square_size()
                     elif self.status == 'post game':
                         self.status = 'pre game'
                         self.message = cfg.WELCOME_MESSAGE
+                if self.status == 'pre game':
+                    if event.key == pg.K_DOWN:
+                        self.selection = (self.selection + 1) % 3
+                    elif event.key == pg.K_UP:
+                        self.selection = (self.selection - 1) % 3
 
     def draw_intro(self):
         self.screen.fill(cfg.INTRO_BACKGROUND)
         text = self.font.render(self.message, True, TEXT_COLORS[self.status])
-        xval = cfg.WIDTH / 2 - text.get_rect().width / 2
-        yval = cfg.HEIGHT / 2 - text.get_rect().height / 2
+        xval = cfg.WIDTH / 2 - text.get_width() / 2
+        yval = cfg.HEIGHT / 2 - 4 * text.get_height()
         self.screen.blit(text, [xval, yval])
+        easy = self.font.render('EASY (10 mines)', True, SELECTED[self.selection == 0])
+        xval = cfg.WIDTH / 2 - easy.get_width() / 2
+        yval = cfg.HEIGHT / 2 - 2 * easy.get_height()
+        self.screen.blit(easy, [xval, yval])
+        medium = self.font.render('MEDIUM (40 mines)', True, SELECTED[self.selection == 1])
+        xval = cfg.WIDTH / 2 - medium.get_width() / 2
+        yval = cfg.HEIGHT / 2
+        self.screen.blit(medium, [xval, yval])
+        hard = self.font.render('HARD (99 mines)', True, SELECTED[self.selection == 2])
+        xval = cfg.WIDTH / 2 - hard.get_width() / 2
+        yval = cfg.HEIGHT / 2 + 2 * hard.get_height()
+        self.screen.blit(hard, [xval, yval])
+
 
     def draw_postgame(self):
         text = self.font.render(self.message, True, TEXT_COLORS[self.status])
