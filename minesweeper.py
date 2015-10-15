@@ -12,7 +12,8 @@ COLORS = {0: cfg.GRAY, 1: cfg.NAVY, 2: cfg.BLUE,
 TEXT_COLORS = {'!': cfg.RED, 1: cfg.WHITE, 2: cfg.WHITE,
                3: cfg.BLACK, 4: cfg.BLACK, 5: cfg.BLACK,
                6: cfg.WHITE, 7: cfg.WHITE, 8: cfg.BLACK,
-               'pre game': cfg.WHITE, 'post game': cfg.BLACK}
+               'pre game': cfg.WHITE, 'post game': cfg.BLACK,
+               'status': cfg.WHITE}
 
 SELECTED = {True: cfg.RED, False: cfg.WHITE}
 
@@ -29,11 +30,11 @@ class Board(object):
 
     def reset(self, difficulty = None):
         if difficulty is not None:
-            row_length, mine_count = LEVELS[difficulty]
+            row_length, self.mines_left = LEVELS[difficulty]
             board_size = row_length ** 2
             choices = list(range(board_size))
             random.shuffle(choices)
-            mines = choices[:mine_count]
+            mines = choices[:self.mines_left]
             self.territory_str = ''
             for row in range(row_length):
                 for col in range(row_length):
@@ -55,9 +56,11 @@ class Board(object):
 
     def mark_mine(self, r, c):
         self.display[r][c] = 'x'
+        self.mines_left -= 1
 
     def unmark_mine(self, r, c):
         self.display[r][c] = ' '
+        self.mines_left += 1
 
     def neighbors(self, r, c):
         potential = [[r - 1, c - 1], [r - 1, c], [r - 1, c + 1], [r, c - 1],
@@ -234,7 +237,7 @@ class MinesweeperCLI(object):
 class MinesweeperPygame(object):
     def __init__(self, board):
         pg.init()
-        size = (cfg.WIDTH, cfg.HEIGHT)
+        size = (cfg.WIDTH, cfg.HEIGHT + cfg.STATUS_BAR_HEIGHT)
         self.screen = pg.display.set_mode(size)
         pg.display.set_caption(cfg.GAME_TITLE)
         self.board = board
@@ -242,7 +245,10 @@ class MinesweeperPygame(object):
         self.done = False
         self.status = 'pre game'
         self.message = cfg.WELCOME_MESSAGE
-        self.font = pg.font.SysFont(cfg.TEXT_FONT, cfg.TEXT_SIZE, False, False)
+        self.font = pg.font.SysFont(cfg.MAIN_TEXT_FONT, cfg.MAIN_TEXT_SIZE,
+                                    False, False)
+        self.status_font = pg.font.SysFont(cfg.STATUS_TEXT_FONT,
+                                           cfg.STATUS_TEXT_SIZE, False, False)
         self.set_square_size()
         self.click_status = 'safe'
         self.selection = 0
@@ -374,6 +380,12 @@ class MinesweeperPygame(object):
                          [c * self.square_width, cfg.HEIGHT], cfg.LINE_THICKNESS)
             pg.draw.line(self.screen, cfg.LINE_COLOR, [0, r * self.square_height],
                          [cfg.WIDTH, r * self.square_height], cfg.LINE_THICKNESS)
+        pg.draw.rect(self.screen, cfg.STATUS_BAR_COLOR,
+                     [0, cfg.HEIGHT, cfg.WIDTH, cfg.STATUS_BAR_HEIGHT])
+        status_message = 'MINES LEFT: ' + str(self.board.mines_left)
+        mines_text = self.status_font.render(status_message,
+                                      True, TEXT_COLORS['status'])
+        self.screen.blit(mines_text, [0, cfg.HEIGHT])
 
 def load_map(number, extension = '.txt'):
     filename = 'map' + number + extension
