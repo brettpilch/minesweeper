@@ -275,9 +275,11 @@ class MinesweeperPygame(object):
         if self.board.dead:
             self.message = cfg.DEAD_MESSAGE
             self.status = 'post game'
+            self.click_status = 'safe'
         elif self.board.check_win():
             self.message = cfg.WIN_MESSAGE
             self.status = 'post game'
+            self.click_status = 'safe'
 
     def get_intro_input(self):
         for event in pg.event.get():
