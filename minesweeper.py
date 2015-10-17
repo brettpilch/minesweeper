@@ -1,5 +1,5 @@
 from __future__ import division
-import os
+import os, os.path
 import pygame as pg
 import config as cfg
 import random
@@ -245,6 +245,7 @@ class MinesweeperPygame(object):
         self.done = False
         self.status = 'pre game'
         self.message = cfg.WELCOME_MESSAGE
+        self.best_message = ''
         self.font = pg.font.SysFont(cfg.MAIN_TEXT_FONT, cfg.MAIN_TEXT_SIZE,
                                     False, False)
         self.status_font = pg.font.SysFont(cfg.STATUS_TEXT_FONT,
@@ -253,6 +254,17 @@ class MinesweeperPygame(object):
         self.click_status = 'safe'
         self.selection = 0
         self.time = 0
+        self.load_best_times()
+
+    def load_best_times(self):
+        try:
+            with open(cfg.BEST_TIMES_FILE) as file_obj:
+                times = file_obj.readlines()
+                self.best_times = [time.strip('\n') for time in times]
+        except IOError:
+            self.best_times = ['100:00','100:00','100:00']
+        if not self.best_times:
+            self.best_times = ['100:00','100:00','100:00']
 
     def set_square_size(self):
         self.square_width = cfg.WIDTH / len(self.board.territory[0])
@@ -285,9 +297,20 @@ class MinesweeperPygame(object):
             self.status = 'post game'
             self.click_status = 'safe'
         elif self.board.check_win():
+            self.update_best_times()
             self.message = cfg.WIN_MESSAGE
             self.status = 'post game'
             self.click_status = 'safe'
+
+    def update_best_times(self):
+        old_best = string_to_time(self.best_times[self.selection])
+        if self.time < old_best:
+            new_best = time_to_string(self.time)
+            self.best_times[self.selection] = new_best
+            self.best_message = 'New record time: {}'.format(new_best)
+            with open(cfg.BEST_TIMES_FILE, 'wb+') as file_obj:
+                file_obj.write('\n'.join(self.best_times))
+
 
     def get_intro_input(self):
         for event in pg.event.get():
@@ -300,6 +323,7 @@ class MinesweeperPygame(object):
                         self.board.reset(self.selection)
                         self.set_square_size()
                         self.time = 0
+                        self.best_message = ''
                     elif self.status == 'post game':
                         self.status = 'pre game'
                         self.message = cfg.WELCOME_MESSAGE
@@ -315,15 +339,18 @@ class MinesweeperPygame(object):
         xval = cfg.WIDTH / 2 - text.get_width() / 2
         yval = cfg.HEIGHT / 2 - 4 * text.get_height()
         self.screen.blit(text, [xval, yval])
-        easy = self.font.render('EASY (10 mines)', True, SELECTED[self.selection == 0])
+        easy_message = 'EASY (10 mines) (best time: {})'.format(self.best_times[0])
+        easy = self.font.render(easy_message, True, SELECTED[self.selection == 0])
         xval = cfg.WIDTH / 2 - easy.get_width() / 2
         yval = cfg.HEIGHT / 2 - 2 * easy.get_height()
         self.screen.blit(easy, [xval, yval])
-        medium = self.font.render('MEDIUM (40 mines)', True, SELECTED[self.selection == 1])
+        medium_message = 'MEDIUM (40 mines) (best time: {})'.format(self.best_times[1])
+        medium = self.font.render(medium_message, True, SELECTED[self.selection == 1])
         xval = cfg.WIDTH / 2 - medium.get_width() / 2
         yval = cfg.HEIGHT / 2
         self.screen.blit(medium, [xval, yval])
-        hard = self.font.render('HARD (99 mines)', True, SELECTED[self.selection == 2])
+        hard_message = 'HARD (99 mines) (best time: {})'.format(self.best_times[2])
+        hard = self.font.render(hard_message, True, SELECTED[self.selection == 2])
         xval = cfg.WIDTH / 2 - hard.get_width() / 2
         yval = cfg.HEIGHT / 2 + 2 * hard.get_height()
         self.screen.blit(hard, [xval, yval])
@@ -336,6 +363,13 @@ class MinesweeperPygame(object):
         pg.draw.rect(self.screen, cfg.POSTGAME_BACKGROUND,
                      [xval, yval, text.get_width(), text.get_height()])
         self.screen.blit(text, [xval, yval])
+        if self.best_message:
+            text = self.font.render(self.best_message, True, TEXT_COLORS[self.status])
+            xval = cfg.WIDTH / 2 - text.get_rect().width / 2
+            yval = cfg.HEIGHT / 2 - text.get_rect().height / 2
+            pg.draw.rect(self.screen, cfg.POSTGAME_BACKGROUND,
+                         [xval, yval, text.get_width(), text.get_height()])
+            self.screen.blit(text, [xval, yval])
 
     def get_game_input(self):
         for event in pg.event.get():
@@ -389,19 +423,23 @@ class MinesweeperPygame(object):
         mines_text = self.status_font.render(status_message,
                                       True, TEXT_COLORS['status'])
         self.screen.blit(mines_text, [0, cfg.HEIGHT])
-        time = self.convert_time()
+        time = time_to_string(self.time)
         time_text = self.status_font.render(time, True, TEXT_COLORS['status'])
         self.screen.blit(time_text, [cfg.WIDTH - time_text.get_width(), cfg.HEIGHT])
 
-    def convert_time(self):
-        total_seconds = self.time // cfg.FRAME_RATE
-        minutes = str(total_seconds // 60)
-        seconds = total_seconds % 60
-        if seconds < 10:
-            seconds = '0' + str(seconds)
-        else:
-            seconds = str(seconds)
-        return minutes + ':' + seconds
+def time_to_string(time):
+    total_seconds = time // cfg.FRAME_RATE
+    minutes = str(total_seconds // 60)
+    seconds = total_seconds % 60
+    if seconds < 10:
+        seconds = '0' + str(seconds)
+    else:
+        seconds = str(seconds)
+    return minutes + ':' + seconds
+
+def string_to_time(string):
+    minutes, seconds = string.split(':')
+    return (int(minutes) * 60 + int(seconds)) * 60
 
 def load_map(number, extension = '.txt'):
     filename = 'map' + number + extension
