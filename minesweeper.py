@@ -388,13 +388,15 @@ class MinesweeperPygame(object):
     def evaluate_click(self, mouse_x, mouse_y):
         row = int(mouse_y / self.square_height)
         col = int(mouse_x / self.square_width)
-        if self.click_status == 'safe':
-            self.board.mark_safe(row, col)
-        elif self.click_status == 'flag':
-            if self.board.display[row][col] == 'x':
-                self.board.unmark_mine(row, col)
-            elif self.board.display[row][col] == cfg.HIDDEN_CHAR:
-                self.board.mark_mine(row, col)
+        if (0 <= row < len(self.board.territory) and
+            0 <= col < len(self.board.territory[0])):
+            if self.click_status == 'safe':
+                self.board.mark_safe(row, col)
+            elif self.click_status == 'flag':
+                if self.board.display[row][col] == 'x':
+                    self.board.unmark_mine(row, col)
+                elif self.board.display[row][col] == cfg.HIDDEN_CHAR:
+                    self.board.mark_mine(row, col)
 
     def draw_board(self):
         self.screen.fill(BG_COLORS[self.click_status])
