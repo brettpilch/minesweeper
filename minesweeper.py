@@ -252,6 +252,7 @@ class MinesweeperPygame(object):
         self.set_square_size()
         self.click_status = 'safe'
         self.selection = 0
+        self.time = 0
 
     def set_square_size(self):
         self.square_width = cfg.WIDTH / len(self.board.territory[0])
@@ -264,6 +265,7 @@ class MinesweeperPygame(object):
         """
         while not self.done:
             if self.status == 'in game':
+                self.time += 1
                 self.get_game_input()
                 self.draw_board()
                 self.check_status()
@@ -297,6 +299,7 @@ class MinesweeperPygame(object):
                         self.status = 'in game'
                         self.board.reset(self.selection)
                         self.set_square_size()
+                        self.time = 0
                     elif self.status == 'post game':
                         self.status = 'pre game'
                         self.message = cfg.WELCOME_MESSAGE
@@ -386,6 +389,19 @@ class MinesweeperPygame(object):
         mines_text = self.status_font.render(status_message,
                                       True, TEXT_COLORS['status'])
         self.screen.blit(mines_text, [0, cfg.HEIGHT])
+        time = self.convert_time()
+        time_text = self.status_font.render(time, True, TEXT_COLORS['status'])
+        self.screen.blit(time_text, [cfg.WIDTH - time_text.get_width(), cfg.HEIGHT])
+
+    def convert_time(self):
+        total_seconds = self.time // cfg.FRAME_RATE
+        minutes = str(total_seconds // 60)
+        seconds = total_seconds % 60
+        if seconds < 10:
+            seconds = '0' + str(seconds)
+        else:
+            seconds = str(seconds)
+        return minutes + ':' + seconds
 
 def load_map(number, extension = '.txt'):
     filename = 'map' + number + extension
