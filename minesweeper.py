@@ -7,7 +7,8 @@ import random
 KEYMAPS = {pg.K_f: 'flag', pg.K_s: 'safe', pg.K_r: 'remove'}
 COLORS = {0: cfg.GRAY, 1: cfg.NAVY, 2: cfg.BLUE,
           3: cfg.GREEN, 4: cfg.YELLOW, 5: cfg.ORANGE,
-          6: cfg.RED, 7: cfg.VIOLET, 8: cfg.PINK, 'x': cfg.BLACK}
+          6: cfg.RED, 7: cfg.VIOLET, 8: cfg.PINK, 'x': cfg.LIGHTGRAY,
+          cfg.ERROR_CHAR: cfg.WHITE}
 
 TEXT_COLORS = {'!': cfg.RED, 1: cfg.WHITE, 2: cfg.WHITE,
                3: cfg.BLACK, 4: cfg.BLACK, 5: cfg.BLACK,
@@ -404,12 +405,16 @@ class MinesweeperPygame(object):
             for c, col in enumerate(row):
                 xval = c * self.square_width + 1
                 yval = r * self.square_height + 1
-                if col not in [cfg.HIDDEN_CHAR, cfg.ERROR_CHAR]:
+                if col not in [cfg.HIDDEN_CHAR]:
                     color = COLORS[col]
                     pg.draw.rect(self.screen, color,
                                  [xval, yval, self.square_width,
                                   self.square_height])
-                if col in ['!'] + list(range(1, 9)):
+                    if col == 'x':
+                        self.draw_flag(xval, yval)
+                    elif col == cfg.ERROR_CHAR:
+                        self.draw_error(xval, yval)
+                if col in list(range(1, 9)):
                     text = self.font.render(str(col), True, TEXT_COLORS[col])
                     x = xval + 0.5 * self.square_width - text.get_width() / 2
                     y = yval + 0.5 * self.square_height - text.get_height() / 2
@@ -429,6 +434,20 @@ class MinesweeperPygame(object):
         time_text = self.status_font.render(time, True, TEXT_COLORS['status'])
         self.screen.blit(time_text, [cfg.WIDTH - time_text.get_width(), cfg.HEIGHT])
 
+    def draw_flag(self, x, y):
+        xval = x + self.square_width / 4
+        yval = y + self.square_height / 4
+        pg.draw.rect(self.screen, cfg.RED, [xval, yval, self.square_width / 2, self.square_height / 2])
+        xval = x + self.square_width / 3
+        yval = y + self.square_height / 3
+        pg.draw.rect(self.screen, cfg.BLACK, [xval, yval, self.square_width / 3, self.square_height / 3])
+
+    def draw_error(self, x, y):
+        pg.draw.line(self.screen, cfg.RED, [x + self.square_width / 4, y + self.square_height / 4],
+                     [x + 3 * self.square_width / 4, y + 3 * self.square_height / 4], 15)
+        pg.draw.line(self.screen, cfg.RED, [x + self.square_width / 4, y + 3 * self.square_height / 4],
+                     [x + 3 * self.square_width / 4, y + self.square_height / 4], 15)
+
 def time_to_string(time):
     total_seconds = time // cfg.FRAME_RATE
     minutes = str(total_seconds // 60)
@@ -441,7 +460,7 @@ def time_to_string(time):
 
 def string_to_time(string):
     minutes, seconds = string.split(':')
-    return (int(minutes) * 60 + int(seconds)) * 60
+    return (int(minutes) * 60 + int(seconds)) * cfg.FRAME_RATE
 
 def load_map(number, extension = '.txt'):
     filename = 'map' + number + extension
