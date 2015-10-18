@@ -20,7 +20,7 @@ SELECTED = {True: cfg.RED, False: cfg.WHITE}
 
 BG_COLORS = {'safe': cfg.WHITE, 'flag': cfg.PINK}
 
-LEVELS = {0: (9, 10) , 1: (16, 40), 2: (22, 99)}
+LEVELS = {0: (9, 10) , 1: (16, 40), 2: (23, 99), 3: (26, 150)}
 
 class Board(object):
     def __init__(self, territory_str = None):
@@ -263,9 +263,11 @@ class MinesweeperPygame(object):
                 times = file_obj.readlines()
                 self.best_times = [time.strip('\n') for time in times]
         except IOError:
-            self.best_times = ['100:00','100:00','100:00']
+            self.best_times = ['100:00' for i in range(len(LEVELS))]
         if not self.best_times:
-            self.best_times = ['100:00','100:00','100:00']
+            self.best_times = ['100:00' for i in range(len(LEVELS))]
+        while len(self.best_times) < len(LEVELS):
+            self.best_times.append('100:00')
 
     def set_square_size(self):
         self.square_width = cfg.WIDTH / len(self.board.territory[0])
@@ -330,9 +332,9 @@ class MinesweeperPygame(object):
                         self.message = cfg.WELCOME_MESSAGE
                 if self.status == 'pre game':
                     if event.key == pg.K_DOWN:
-                        self.selection = (self.selection + 1) % 3
+                        self.selection = (self.selection + 1) % len(LEVELS)
                     elif event.key == pg.K_UP:
-                        self.selection = (self.selection - 1) % 3
+                        self.selection = (self.selection - 1) % len(LEVELS)
 
     def draw_intro(self):
         self.screen.fill(cfg.INTRO_BACKGROUND)
@@ -355,6 +357,11 @@ class MinesweeperPygame(object):
         xval = cfg.WIDTH / 2 - hard.get_width() / 2
         yval = cfg.HEIGHT / 2 + 2 * hard.get_height()
         self.screen.blit(hard, [xval, yval])
+        insane_message = 'INSANE (150 mines) (best time: {})'.format(self.best_times[3])
+        insane = self.font.render(insane_message, True, SELECTED[self.selection == 3])
+        xval = cfg.WIDTH / 2 - insane.get_width() / 2
+        yval = cfg.HEIGHT / 2 + 4 * insane.get_height()
+        self.screen.blit(insane, [xval, yval])
 
 
     def draw_postgame(self):
@@ -391,7 +398,7 @@ class MinesweeperPygame(object):
         col = int(mouse_x / self.square_width)
         if (0 <= row < len(self.board.territory) and
             0 <= col < len(self.board.territory[0])):
-            if self.click_status == 'safe':
+            if self.click_status == 'safe' and self.board.display[row][col] == cfg.HIDDEN_CHAR:
                 self.board.mark_safe(row, col)
             elif self.click_status == 'flag':
                 if self.board.display[row][col] == 'x':
@@ -444,9 +451,9 @@ class MinesweeperPygame(object):
 
     def draw_error(self, x, y):
         pg.draw.line(self.screen, cfg.RED, [x + self.square_width / 4, y + self.square_height / 4],
-                     [x + 3 * self.square_width / 4, y + 3 * self.square_height / 4], 15)
+                     [x + 3 * self.square_width / 4, y + 3 * self.square_height / 4], 10)
         pg.draw.line(self.screen, cfg.RED, [x + self.square_width / 4, y + 3 * self.square_height / 4],
-                     [x + 3 * self.square_width / 4, y + self.square_height / 4], 15)
+                     [x + 3 * self.square_width / 4, y + self.square_height / 4], 10)
 
 def time_to_string(time):
     total_seconds = time // cfg.FRAME_RATE
