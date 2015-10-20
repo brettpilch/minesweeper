@@ -1,5 +1,7 @@
-import pygame as pg
-
+"""
+This file contains all the constants used by the minesweeper python files.
+"""
+# RGB COLOR CODES:
 BLACK    = (   0,   0,   0)
 WHITE    = ( 255, 255, 255)
 GREEN    = (   0, 255,   0)
@@ -12,8 +14,8 @@ YELLOW   = ( 255, 255,   0)
 GRAY     = ( 100, 100, 100)
 LIGHTGRAY= ( 200, 200, 200)
 ORANGE   = ( 255, 127,   0)
-TRANS    = (   1,   2,   3)
 
+# PYGAME GAMEBOARD FEATURES:
 WIDTH = 770
 HEIGHT = 770
 STATUS_BAR_HEIGHT = 20
@@ -29,19 +31,18 @@ MAIN_TEXT_FONT = 'Calibri'
 MAIN_TEXT_SIZE = 30
 STATUS_TEXT_FONT = 'Calibri'
 STATUS_TEXT_SIZE = 15
-WALL_CHAR = 'x'
-HALLWAY_CHAR = ' '
 GAME_TITLE = 'Minesweeper'
-PLAYER_CHAR = '@'
-FINISH_CHAR = '$'
-HIDDEN_CHAR = ' '
 HIDDEN_COLOR = WHITE
 LINE_COLOR = BLACK
 LINE_THICKNESS = 3
-ERROR_CHAR = '!'
 BEST_TIMES_FILE = 'best_times.txt'
 
-KEYMAPS = {pg.K_f: 'flag', pg.K_s: 'safe', pg.K_r: 'remove'}
+# BOARD DISPLAY CHARACTERS:
+MINE_CHAR = 'x'
+HIDDEN_CHAR = ' '
+ERROR_CHAR = '!'
+
+# COLOR MAPPINGS:
 COLORS = {0: GRAY, 1: NAVY, 2: BLUE,
           3: GREEN, 4: YELLOW, 5: ORANGE,
           6: RED, 7: VIOLET, 8: PINK, 'x': LIGHTGRAY,
@@ -57,4 +58,6 @@ SELECTED = {True: RED, False: WHITE}
 
 BG_COLORS = {'safe': WHITE, 'flag': PINK}
 
+# LEVEL DEFINITIONS
+# {level: (board width in squares, number of mines)}
 LEVELS = {0: (9, 10) , 1: (16, 40), 2: (23, 99), 3: (26, 150)}
