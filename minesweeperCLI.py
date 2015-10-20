@@ -1,14 +1,29 @@
+"""
+Play minesweeper from the command line.
+"""
+
 from __future__ import division
 from board import Board
 import os
 
 class MinesweeperCLI(object):
+    """
+    A class to play minesweeper using command-line interface.
+    """
     def __init__(self, board = None, header = ''):
+        """
+        Initialize the game with a new Board object.
+        """
         self.board = board
         self.playing = False
         self.header = header
 
     def game_loop(self):
+        """
+        A loop that displays the current status of the game board,
+        asks for user input, and updates the board. The loop is repeated
+        until the game is over.
+        """
         while not (self.board and self.board.territory):
             print 'You must load a map first.'
             self.game_menu()
@@ -23,6 +38,9 @@ class MinesweeperCLI(object):
                 self.game_lose()
 
     def game_menu(self):
+        """
+        Prompt the user to load a map, play a game, or quit.
+        """
         reply = raw_input('Choose an action: (l)oad map, (p)lay, (q)uit ')
         if reply == 'l':
             self.input_map()
@@ -36,17 +54,26 @@ class MinesweeperCLI(object):
             self.game_menu()
 
     def game_win(self):
+        """
+        Display a victory message and return to the main menu.
+        """
         print 'Congratulations! You won!'
         self.playing = False
         self.game_menu()
 
     def game_lose(self):
+        """
+        Display a defeat message and return to the main menu.
+        """
         print 'Oops! You hit a mine! Game over.'
         self.playing = False
         new_board = Board(self.board.territory_str)
         self.__init__(new_board, self.header)
 
     def input_map(self):
+        """
+        Ask the user for a map # to load.
+        """
         reply = None
         choices = os.listdir(os.getcwd())
         choices = [choice[3:-4] for choice in choices if choice.startswith('map')]
@@ -66,11 +93,20 @@ class MinesweeperCLI(object):
             self.input_map()
 
     def initialize_board(self, territory_str):
+        """
+        Convert a territory string into a Board object to track the
+        state of the game.
+        """
         self.board = Board(territory_str)
         cols = [str(i) for i in range(len(self.board.territory[0]))]
         self.header = '  ' + ''.join(cols)
 
     def load_map(self, number, extension = '.txt'):
+        """
+        Given a certain map # n, open the file 'mapn.txt'.
+        Create a Board object from that text file.
+        Return to the main menu.
+        """
         filename = 'map' + number + extension
         territory_str = ''
         with open(filename, 'r') as file_obj:
@@ -82,12 +118,18 @@ class MinesweeperCLI(object):
         self.game_menu()
 
     def display_board(self):
+        """
+        Print the game board to the console.
+        """
         cols = [i for i in range(len(self.board.territory[0]))]
         print self.header
         for r, row in enumerate(self.board.display):
             print str(r) + ' ' + ''.join([str(r) for r in row])
 
     def get_next_move(self):
+        """
+        Get the next move from the user.
+        """
         print 'Choose a square to act upon'
         row = self.input_row()
         col = self.input_col()
@@ -105,6 +147,9 @@ class MinesweeperCLI(object):
             print 'there is a bug in get_next_move()'
 
     def input_row(self):
+        """
+        Get the row # of the next move from the user.
+        """
         row = raw_input('Enter a row number: ')
         choices = [str(i) for i in range(len(self.board.territory))]
         if row == 'q':
@@ -116,6 +161,9 @@ class MinesweeperCLI(object):
             return int(row)
 
     def input_col(self):
+        """
+        Get the column # of the next move from the user.
+        """
         col = raw_input('Enter a column number: ')
         choices = [str(i) for i in range(len(self.board.territory[0]))]
         if col == 'q':
@@ -127,6 +175,10 @@ class MinesweeperCLI(object):
             return int(col)
 
     def input_move(self):
+        """
+        Ask the user what type of move to perform (flag a mine, remove a flag,
+        or declare a square safe).
+        """
         move = raw_input('(f)lag a mine there, (r)emove a flag, or (d)eclare it safe? ')
         if move == 'f':
             return 'mine'
