@@ -1,3 +1,5 @@
+import pygame as pg
+
 BLACK    = (   0,   0,   0)
 WHITE    = ( 255, 255, 255)
 GREEN    = (   0, 255,   0)
@@ -38,3 +40,21 @@ LINE_COLOR = BLACK
 LINE_THICKNESS = 3
 ERROR_CHAR = '!'
 BEST_TIMES_FILE = 'best_times.txt'
+
+KEYMAPS = {pg.K_f: 'flag', pg.K_s: 'safe', pg.K_r: 'remove'}
+COLORS = {0: GRAY, 1: NAVY, 2: BLUE,
+          3: GREEN, 4: YELLOW, 5: ORANGE,
+          6: RED, 7: VIOLET, 8: PINK, 'x': LIGHTGRAY,
+          ERROR_CHAR: WHITE}
+
+TEXT_COLORS = {'!': RED, 1: WHITE, 2: WHITE,
+               3: BLACK, 4: BLACK, 5: BLACK,
+               6: WHITE, 7: WHITE, 8: BLACK,
+               'pre game': WHITE, 'post game': BLACK,
+               'status': WHITE}
+
+SELECTED = {True: RED, False: WHITE}
+
+BG_COLORS = {'safe': WHITE, 'flag': PINK}
+
+LEVELS = {0: (9, 10) , 1: (16, 40), 2: (23, 99), 3: (26, 150)}
