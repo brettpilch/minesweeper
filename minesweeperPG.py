@@ -1,10 +1,21 @@
+"""
+Play a GUI version of Minesweeper using pygame.
+"""
+
 from __future__ import division
 import config as cfg
 import pygame as pg
 import helpers as hp
 
 class MinesweeperPygame(object):
+    """
+    A class to play minesweeper in pygame.
+    """
     def __init__(self, board):
+        """
+        Initialize the game with a board object.
+        Start pygame and create a pygame window.
+        """
         pg.init()
         size = (cfg.WIDTH, cfg.HEIGHT + cfg.STATUS_BAR_HEIGHT)
         self.screen = pg.display.set_mode(size)
@@ -26,6 +37,9 @@ class MinesweeperPygame(object):
         self.load_best_times()
 
     def load_best_times(self):
+        """
+        Load the best times from file.
+        """
         try:
             with open(cfg.BEST_TIMES_FILE) as file_obj:
                 times = file_obj.readlines()
@@ -38,20 +52,24 @@ class MinesweeperPygame(object):
             self.best_times.append('100:00')
 
     def set_square_size(self):
+        """
+        Use the board size and screen width/height to determine
+        square width/height.
+        """
         self.square_width = cfg.WIDTH / len(self.board.territory[0])
         self.square_height = cfg.HEIGHT / len(self.board.territory)
 
     def game_loop(self):
         """
-        Draw the game board and wait for player movements.
-        Display welcome message between games.
+        Draw the game board and wait for user input.
+        Display messages between games.
         """
         while not self.done:
             if self.status == 'in game':
                 self.time += 1
                 self.get_game_input()
                 self.draw_board()
-                self.check_status()
+                self.update_status()
             elif self.status == 'pre game':
                 self.draw_intro()
                 self.get_intro_input()
@@ -62,7 +80,11 @@ class MinesweeperPygame(object):
             self.clock.tick(cfg.FRAME_RATE)
         pg.quit()
 
-    def check_status(self):
+    def update_status(self):
+        """
+        After each move, check if the player has won or lost.
+        If so, update to a 'post game' status.
+        """
         if self.board.dead:
             self.message = cfg.DEAD_MESSAGE
             self.status = 'post game'
@@ -74,6 +96,9 @@ class MinesweeperPygame(object):
             self.click_status = 'safe'
 
     def update_best_times(self):
+        """
+        If a player gets a new best time, write it to file.
+        """
         old_best = hp.string_to_frames(self.best_times[self.selection], cfg.FRAME_RATE)
         if self.time < old_best:
             new_best = hp.frames_to_string(self.time, cfg.FRAME_RATE)
@@ -84,6 +109,9 @@ class MinesweeperPygame(object):
 
 
     def get_intro_input(self):
+        """
+        Get user input during pre- and post-game.
+        """
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.done = True
@@ -105,6 +133,9 @@ class MinesweeperPygame(object):
                         self.selection = (self.selection - 1) % len(cfg.LEVELS)
 
     def draw_intro(self):
+        """
+        Draw the intro level select screen.
+        """
         self.screen.fill(cfg.INTRO_BACKGROUND)
         text = self.font.render(self.message, True, cfg.TEXT_COLORS[self.status])
         xval = cfg.WIDTH / 2 - text.get_width() / 2
@@ -133,6 +164,10 @@ class MinesweeperPygame(object):
 
 
     def draw_postgame(self):
+        """
+        Display a 'game over' message.
+        If player got a new best time, display a message.
+        """
         text = self.font.render(self.message, True, cfg.TEXT_COLORS[self.status])
         xval = cfg.WIDTH / 2 - text.get_rect().width / 2
         yval = cfg.HEIGHT - text.get_rect().height
@@ -148,6 +183,9 @@ class MinesweeperPygame(object):
             self.screen.blit(text, [xval, yval])
 
     def get_game_input(self):
+        """
+        Get user input during game.
+        """
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.done = True
@@ -162,6 +200,10 @@ class MinesweeperPygame(object):
                 self.evaluate_click(mouse_x, mouse_y)
 
     def evaluate_click(self, mouse_x, mouse_y):
+        """
+        Find out which square was clicked, and perform
+        the appropriate action for that square.
+        """
         row = int(mouse_y / self.square_height)
         col = int(mouse_x / self.square_width)
         if (0 <= row < len(self.board.territory) and
@@ -175,6 +217,9 @@ class MinesweeperPygame(object):
                     self.board.mark_mine(row, col)
 
     def draw_board(self):
+        """
+        Draw the game board.
+        """
         self.screen.fill(cfg.BG_COLORS[self.click_status])
         for r, row in enumerate(self.board.display):
             for c, col in enumerate(row):
@@ -210,6 +255,9 @@ class MinesweeperPygame(object):
         self.screen.blit(time_text, [cfg.WIDTH - time_text.get_width(), cfg.HEIGHT])
 
     def draw_flag(self, x, y):
+        """
+        Draw a flag image in the square at position (x, y).
+        """
         xval = x + self.square_width / 4
         yval = y + self.square_height / 4
         pg.draw.rect(self.screen, cfg.RED, [xval, yval, self.square_width / 2, self.square_height / 2])
@@ -218,6 +266,9 @@ class MinesweeperPygame(object):
         pg.draw.rect(self.screen, cfg.BLACK, [xval, yval, self.square_width / 3, self.square_height / 3])
 
     def draw_error(self, x, y):
+        """
+        Draw a big 'X' in a square if player mistakenly marked it safe.
+        """
         pg.draw.line(self.screen, cfg.RED, [x + self.square_width / 4, y + self.square_height / 4],
                      [x + 3 * self.square_width / 4, y + 3 * self.square_height / 4], 10)
         pg.draw.line(self.screen, cfg.RED, [x + self.square_width / 4, y + 3 * self.square_height / 4],
